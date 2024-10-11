@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transformers.js | Sample Browser Extension</title>
+
+    <!-- Load styles -->
+    <link rel="stylesheet" href="popup.css" />
+</head>
+
+<body>
+    <div class="container">
+        <h1>Transformers.js</h1>
+        <h2>Run 🤗 Transformers in a Browser Extension!</h2>
+        <h3>Text Classification</h3>
+        <input id="text" placeholder="Enter text here">
+        <pre id="output"></pre>
+
+        <h3>Text Recognition</h3>
+        <input type="file" id="audio-input" accept=".mp3">
+        <button id="transcribe-button">Transcribe</button>
+        <pre id="transcription-output"></pre>
+    </div>
+</body>
+
+</html>
