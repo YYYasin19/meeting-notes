@@ -28,7 +28,9 @@ const audioInput = document.getElementById("audio-input") // this is an mp3 file
 const transcribeOutput = document.getElementById("transcription-output")
 transcribeButton.addEventListener("click", async (event) => {
 
+    console.log('audioInput', audioInput)
     const audioArray = await createAudioArray(audioInput.files[0])
+    console.log('audioArray', audioArray)
 
     const message = {
         action: 'transcribe',

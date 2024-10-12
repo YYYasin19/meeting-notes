@@ -9,7 +9,6 @@ env.allowLocalModels = false;
 // See https://github.com/microsoft/onnxruntime/issues/14445 for more information.
 env.backends.onnx.wasm.numThreads = 1;
 
-
 class PipelineSingleton {
     static task = 'text-classification';
     static model = 'Xenova/distilbert-base-uncased-finetuned-sst-2-english';
@@ -24,31 +23,16 @@ class PipelineSingleton {
     }
 }
 
-class TranscribeSingleton {
-    static task = "automatic-speech-recognition"
-    static model = "Xenova/whisper-tiny"
-    static instance = null;
-
-    static async getInstance(progress_callback = null) {
-        if (this.instance === null) {
-            this.instance = pipeline(this.task, this.model, { progress_callback });
-        }
-        return this.instance;
-    }
-}
 
 // Create generic classify function, which will be reused for the different types of events.
 const classify = async (text) => {
     // Get the pipeline instance. This will load and build the model when run for the first time.
     let model = await PipelineSingleton.getInstance((data) => {
-        // You can track the progress of the pipeline creation here.
-        // e.g., you can send `data` back to the UI to indicate a progress bar
         // console.log('progress', data)
     });
 
     // Actually run the model on the input text
-    let result = await model(text);
-    return result;
+    return await model(text);
 };
 
 let settings = {
@@ -102,7 +86,7 @@ const transcribeTask = async (
     subtask,
     language,
 ) => {
-
+    console.log("Transcribe task", audio, model, multilingual, quantized, subtask, language)
     const isDistilWhisper = model.startsWith("distil-whisper/");
 
     let modelName = model;
@@ -171,11 +155,7 @@ const transcribeTask = async (
             force_full_sequences: false,
         });
 
-        self.postMessage({
-            status: "update",
-            task: "automatic-speech-recognition",
-            data: data,
-        });
+        return data;
     }
 
     // Actually run transcription
@@ -199,12 +179,9 @@ const transcribeTask = async (
         // Callback functions
         callback_function: callback_function, // after each generation step
         chunk_callback: chunk_callback, // after each chunk is processed
+    
     }).catch((error) => {
-        self.postMessage({
-            status: "error",
-            task: "automatic-speech-recognition",
-            data: error,
-        });
+        console.error("Error transcribing audio", error)
         return null;
     });
 
@@ -213,25 +190,13 @@ const transcribeTask = async (
 
 
 const transcribe = async (audio) => {
-    // Get the pipeline instance. This will load and build the model when run for the first time.
-    let model = await TranscribeSingleton.getInstance((data) => {
-        // console.log('progress', data)
-    });
-
-    // Convert audio to Float32Array if it's not already
-    const audioFloat32 = audio instanceof Float32Array ? audio : new Float32Array(audio);
-    console.log("audioFile", audioFloat32)
-    console.log("audioFile Type", typeof audioFloat32)
-
-    // Actually run the model on the input audio
-    let result = await transcribeTask(audioFloat32, settings.DEFAULT_MODEL, settings.DEFAULT_MULTILINGUAL, settings.DEFAULT_QUANTIZED, settings.DEFAULT_SUBTASK, settings.DEFAULT_LANGUAGE);
-    return result;
+    return await transcribeTask(audio, settings.DEFAULT_MODEL, settings.DEFAULT_MULTILINGUAL, settings.DEFAULT_QUANTIZED, settings.DEFAULT_SUBTASK, settings.DEFAULT_LANGUAGE);
 };
 
 
 ////////////////////// Message Events /////////////////////
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-    console.log('sender', sender)
+    console.log('message', message)
     if (message.action !== 'classify' && message.action !== 'transcribe') return; // Ignore messages that are not meant for classification or transcription.
 
     // Run model prediction asynchronously
@@ -242,10 +207,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             result = await classify(message.text);
         
         } else if (message.action === 'transcribe') {
-            // Perform transcription
-            // Note: You'll need to implement the transcribe function
-            console.log(message.audio)
-            result = await transcribe(message.audio);
+            let audioArray = Float32Array.from(Object.values(message.audio)) // checked
+            result = await transcribe(audioArray);
         }
 
         // Send response back to UI
