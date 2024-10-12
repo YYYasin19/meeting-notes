@@ -151,8 +151,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             result = await classify(message.text);
         
         } else if (message.action === 'transcribe') {
-            // let audioArray = Float32Array.from(Object.values(message.audio))
-            result = await transcribe(null);
+            let audioArray = Float32Array.from(Object.values(message.audio))
+            result = await transcribe(audioArray);
         }
 
         // Send response back to UI
