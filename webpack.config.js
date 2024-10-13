@@ -1,4 +1,3 @@
-
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -11,8 +10,8 @@ const config = {
     mode: 'development',
     devtool: 'inline-source-map',
     entry: {
-        background: './src/background.js',
-        popup: './src/popup.js',
+        background: './src/background.ts',
+        popup: './src/popup.ts',
         content: './src/content.js',
     },
     output: {
@@ -37,6 +36,18 @@ const config = {
             ],
         })
     ],
+    module: {
+        rules: [
+            {
+                test: /\.tsx?$/,
+                use: 'ts-loader',
+                exclude: /node_modules/,
+            },
+        ],
+    },
+    resolve: {
+        extensions: ['.tsx', '.ts', '.js'],
+    },
 };
 
 export default config;
