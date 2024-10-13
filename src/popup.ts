@@ -51,7 +51,12 @@ const transcribeOutput = document.getElementById(
 
 transcribeButton.addEventListener("click", async () => {
   console.log("Transcribe button clicked");
-  const audioArray = await createAudioArray(audioInput.files?.[0]);
+  let file = audioInput.files?.[0];
+  if (!file) {
+    alert("No file selected");
+    return;
+  }
+  const audioArray = await createAudioArray(file);
 
   const message: TranscribeMessage = {
     action: "transcribe",
