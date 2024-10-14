@@ -8,6 +8,8 @@ import {
   AutomaticSpeechRecognitionPipeline,
 } from "@xenova/transformers";
 
+import { TranscribeMessage, ClassifyMessage } from "./popup";
+
 import { wavAudioFromUrl } from "./utils";
 
 // Skip initial check for local models, since we are not loading any local models.
@@ -126,7 +128,7 @@ const transcribe = async (audio: Float32Array): Promise<any> => {
   // Actually run transcription
   let audioData: Float32Array;
   try {
-    audioData = await wavAudioFromUrl(settings.DEFAULT_AUDIO_URL);
+    audioData = await wavAudioFromUrl(audio || settings.DEFAULT_AUDIO_URL);
   } catch (error) {
     console.error("Error processing audio file:", error);
     return "Error processing audio file: " + (error as Error).message;
@@ -153,7 +155,7 @@ const transcribe = async (audio: Float32Array): Promise<any> => {
 ////////////////////// Message Events /////////////////////
 chrome.runtime.onMessage.addListener(
   (
-    message: any,
+    message: TranscribeMessage | ClassifyMessage,
     sender: chrome.runtime.MessageSender,
     sendResponse: (response?: any) => void
   ) => {
@@ -167,7 +169,9 @@ chrome.runtime.onMessage.addListener(
         // Perform classification
         result = await classify(message.text);
       } else if (message.action === "transcribe") {
-        let audioArray = Float32Array.from(Object.values(message.audio));
+        console.log("Transcribe message audio", message.audio);
+
+        let audioArray = Float32Array.from(message.audio);
         result = await transcribe(audioArray);
       }
 

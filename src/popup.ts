@@ -3,14 +3,25 @@
 import { createAudioArray } from "./utils";
 
 // Define types for the message and response
-interface ClassifyMessage {
+export interface ClassifyMessage {
   action: "classify";
   text: string;
 }
 
-interface TranscribeMessage {
+export interface TranscribeMessage {
   action: "transcribe";
-  audio?: Float32Array;
+  audio: Array<number>;
+}
+
+function readFile(file: File): Promise<ArrayBuffer> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      resolve(event.target!.result as ArrayBuffer);
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(file);
+  });
 }
 
 type Message = ClassifyMessage | TranscribeMessage;
@@ -56,11 +67,12 @@ transcribeButton.addEventListener("click", async () => {
     alert("No file selected");
     return;
   }
-  const audioArray = await createAudioArray(file);
-
+  // const audioArray = await createAudioArray(file);
+  const audio = await readFile(file);
+  console.log("audio", audio);
   const message: TranscribeMessage = {
     action: "transcribe",
-    audio: audioArray,
+    audio: Array.from(new Uint8Array(audio)),
   };
 
   chrome.runtime.sendMessage(message, (response: Response) => {

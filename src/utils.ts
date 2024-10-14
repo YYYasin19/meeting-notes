@@ -28,10 +28,17 @@ export async function createAudioArray(audio: File) {
   return audioArray;
 }
 
-export async function wavAudioFromUrl(url: string): Promise<Float32Array> {
-  let response = await fetch(url);
-  let arrayBuffer = await response.arrayBuffer();
-  let buffer = new Uint8Array(arrayBuffer);
+export async function wavAudioFromUrl(
+  input: string | Float32Array
+): Promise<Float32Array> {
+  let buffer: Uint8Array;
+  if (typeof input === "string") {
+    let response = await fetch(input);
+    let arrayBuffer = await response.arrayBuffer();
+    buffer = new Uint8Array(arrayBuffer);
+  } else {
+    buffer = new Uint8Array(input);
+  }
 
   // Read .wav file and convert it to required format
   let wav = new WaveFile(buffer);
